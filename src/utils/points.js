@@ -1,4 +1,4 @@
-import { ALLOCATIONS, TOP_10_FIFA } from '../data/sweepstake.js';
+import { ALLOCATIONS, TOP_10_FIFA, getTeamAllocation } from '../data/sweepstake.js';
 
 // ── Group stage points ────────────────────────────────────────────────────────
 // standings: array of groups from API response
