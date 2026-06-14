@@ -22,6 +22,7 @@ const R32_MATCHUPS = [
 ];
 
 const STAGE_ORDER = ['ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
+const STAGE_SLOTS = { ROUND_OF_32: 16, ROUND_OF_16: 8, QUARTER_FINALS: 4, SEMI_FINALS: 2, FINAL: 1 };
 const STAGE_LABELS = {
   ROUND_OF_32: 'Round of 32',
   ROUND_OF_16: 'Round of 16',
@@ -72,9 +73,16 @@ export default function WallChart({ matches }) {
                 ? R32_MATCHUPS.map(m => (
                     <MatchCard key={m.id} matchId={m.id} homePlaceholder={m.home} awayPlaceholder={m.away} apiMatches={byStage[stage]} />
                   ))
-                : (byStage[stage] || []).map(m => (
-                    <MatchCard key={m.id} apiMatch={m} />
-                  ))
+                : (() => {
+                    const apiMatches = byStage[stage] || [];
+                    const slots = STAGE_SLOTS[stage];
+                    const cards = apiMatches.map(m => <MatchCard key={m.id} apiMatch={m} />);
+                    // Pad with TBD placeholders up to the expected number of slots
+                    for (let i = cards.length; i < slots; i++) {
+                      cards.push(<MatchCard key={`tbd-${stage}-${i}`} />);
+                    }
+                    return cards;
+                  })()
               }
             </div>
           </div>
@@ -88,8 +96,8 @@ function MatchCard({ matchId, homePlaceholder, awayPlaceholder, apiMatch, apiMat
   // Try to find matching API match by matchday ID
   const resolved = apiMatch || (apiMatches || []).find(m => String(m.id) === matchId?.replace('M', ''));
 
-  const homeName = resolved?.homeTeam?.name || homePlaceholder || '?';
-  const awayName = resolved?.awayTeam?.name || awayPlaceholder || '?';
+  const homeName = resolved?.homeTeam?.name || homePlaceholder || 'TBD';
+  const awayName = resolved?.awayTeam?.name || awayPlaceholder || 'TBD';
   const homeScore = resolved?.score?.fullTime?.home;
   const awayScore = resolved?.score?.fullTime?.away;
   const finished = resolved?.status === 'FINISHED';
