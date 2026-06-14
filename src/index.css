@@ -1,0 +1,37 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --raised: #1C1C1C;
+  --border: #2A2A2A;
+  --text: #F0F0F0;
+  --muted: #888;
+  --accent: #10B981;
+  --tier-t1: #F59E0B;
+  --tier-t2: #9CA3AF;
+  --tier-t3: #6B7280;
+  --tier-t4: #4B5563;
+  --tier-dh: #F97316;
+}
+
+html { font-size: 14px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+#root { display: flex; flex-direction: column; min-height: 100vh; }
+
+button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
+
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 10px; text-align: left; }
+th { color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
