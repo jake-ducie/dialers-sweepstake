@@ -15,7 +15,7 @@ export default function PointsTable({ pointsData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {sorted.map((player, rank) => {
-        const data = playerTotals[player.id] || { gsPts: 0, koPts: 0, bonusPts: 0, total: 0, teams: [] };
+        const data = playerTotals[player.id] || { gsPts: 0, koPts: 0, bonusPts: 0, provisionalBonusPts: 0, total: 0, teams: [] };
         const isOpen = expanded[player.id];
 
         return (
@@ -54,7 +54,7 @@ export default function PointsTable({ pointsData }) {
               <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
                 <Stat label="GS" value={data.gsPts} />
                 <Stat label="KO" value={data.koPts} />
-                <Stat label="Bonus" value={data.bonusPts} />
+                <Stat label="Bonus" value={data.bonusPts} provisional={data.provisionalBonusPts > 0} />
                 <span style={{
                   fontSize: '1.3rem', fontWeight: 800, color: player.color, minWidth: 36, textAlign: 'right',
                 }}>{data.total}</span>
@@ -82,7 +82,9 @@ export default function PointsTable({ pointsData }) {
                         <td><TierBadge tier={t.tier} /></td>
                         <td style={{ textAlign: 'right', color: 'var(--muted)' }}>{t.gs}</td>
                         <td style={{ textAlign: 'right', color: 'var(--muted)' }}>{t.ko}</td>
-                        <td style={{ textAlign: 'right', color: t.bonus > 0 ? 'var(--accent)' : 'var(--muted)' }}>{t.bonus}</td>
+                        <td style={{ textAlign: 'right', color: t.bonus > 0 ? 'var(--accent)' : 'var(--muted)' }}>
+                          {t.bonus > 0 ? (t.bootBonus > 0 || t.gloveBonus > 0 ? `${t.bonus}*` : t.bonus) : 0}
+                        </td>
                         <td style={{ textAlign: 'right', fontWeight: 600, color: player.color }}>{t.total}</td>
                       </tr>
                     ))}
@@ -97,11 +99,13 @@ export default function PointsTable({ pointsData }) {
   );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, provisional }) {
   return (
     <div style={{ textAlign: 'right' }}>
       <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{value}</div>
+      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+        {value}{provisional ? <span style={{ color: 'var(--tier-dh)', fontSize: '0.8rem' }}>*</span> : null}
+      </div>
     </div>
   );
 }

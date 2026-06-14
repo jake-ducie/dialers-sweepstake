@@ -194,42 +194,49 @@ export function calcAllPoints({ standings, matches, scorers }) {
   const { leaders: bootLeaders } = calcGoldenBoot(scorers);
   const darkHorseBonus = calcDarkHorseBonus(matches);
 
-  // Golden boot bonus: teams that have the boot leader
-  const bootTeams = new Set(bootLeaders.map(s => s.team?.name?.toLowerCase()));
-  // Golden glove: team with most clean sheets
-  let maxCS = 0;
-  Object.values(cleanSheets).forEach(v => { if (v > maxCS) maxCS = v; });
-  const gloveTeams = new Set(
-    Object.entries(cleanSheets).filter(([, v]) => v === maxCS && maxCS > 0).map(([k]) => k)
+  // Resolve boot/glove bonus to player IDs via getTeamAllocation (handles API name variants)
+  const bootPlayerIds = new Set(
+    bootLeaders.map(s => getTeamAllocation(s.team?.name)?.player).filter(Boolean)
   );
 
-  const playerTotals = {}; // playerId -> { gsPts, koPts, bonusPts, total, teams[] }
+  let maxCS = 0;
+  Object.values(cleanSheets).forEach(v => { if (v > maxCS) maxCS = v; });
+  const glovePlayerIds = new Set(
+    Object.entries(cleanSheets)
+      .filter(([, v]) => v === maxCS && maxCS > 0)
+      .map(([name]) => getTeamAllocation(name)?.player)
+      .filter(Boolean)
+  );
+
+  const playerTotals = {};
 
   ALLOCATIONS.forEach(({ player, team, tier }) => {
     const key = team.toLowerCase();
     const gs = groupPts[key] ?? 0;
     const ko = knockoutPts(team, teamBestRound, champion);
-    let bonus = 0;
-    if (bootTeams.has(key)) bonus += 1;
-    if (gloveTeams.has(key)) bonus += 1;
+    const bootBonus  = bootPlayerIds.has(player)  ? 1 : 0;
+    const gloveBonus = glovePlayerIds.has(player) ? 1 : 0;
+    const bonus = bootBonus + gloveBonus;
 
     if (!playerTotals[player]) {
-      playerTotals[player] = { gsPts: 0, koPts: 0, bonusPts: 0, total: 0, teams: [] };
+      playerTotals[player] = { gsPts: 0, koPts: 0, bonusPts: 0, provisionalBonusPts: 0, dhBonusPts: 0, total: 0, teams: [] };
     }
     playerTotals[player].gsPts += gs;
     playerTotals[player].koPts += ko;
     playerTotals[player].bonusPts += bonus;
+    playerTotals[player].provisionalBonusPts += bonus; // boot + glove are provisional
     playerTotals[player].total += gs + ko + bonus;
-    playerTotals[player].teams.push({ team, tier, gs, ko, bonus, total: gs + ko + bonus });
+    playerTotals[player].teams.push({ team, tier, gs, ko, bonus, bootBonus, gloveBonus, total: gs + ko + bonus });
   });
 
-  // Add DH bonus at player level
+  // DH bonus is confirmed (not provisional)
   Object.entries(darkHorseBonus).forEach(([playerId, pts]) => {
     if (playerTotals[playerId]) {
       playerTotals[playerId].bonusPts += pts;
+      playerTotals[playerId].dhBonusPts += pts;
       playerTotals[playerId].total += pts;
     }
   });
 
-  return { playerTotals, groupPts, teamBestRound, champion, bootTeams, gloveTeams, cleanSheets, bootLeaders };
+  return { playerTotals, groupPts, teamBestRound, champion, cleanSheets, bootLeaders, bootPlayerIds, glovePlayerIds };
 }
