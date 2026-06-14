@@ -6,8 +6,9 @@ import GroupStage from './components/GroupStage.jsx';
 import WallChart from './components/WallChart.jsx';
 import TopScorers from './components/TopScorers.jsx';
 import CleanSheets from './components/CleanSheets.jsx';
+import Rules from './components/Rules.jsx';
 
-const TABS = ['Points Table', 'Group Stage', 'Wall Chart', 'Top Scorers', 'Clean Sheets'];
+const TABS = ['Points Table', 'Group Stage', 'Top Scorers', 'Wall Chart', 'Clean Sheets', 'Rules'];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(0);
@@ -63,9 +64,10 @@ export default function App() {
       <main style={{ flex: 1, padding: '20px', maxWidth: 1400, width: '100%', margin: '0 auto' }}>
         {activeTab === 0 && <PointsTable pointsData={pointsData} />}
         {activeTab === 1 && <GroupStage standings={standings} />}
-        {activeTab === 2 && <WallChart matches={matches} standings={standings} />}
-        {activeTab === 3 && <TopScorers scorers={scorers} pointsData={pointsData} />}
+        {activeTab === 2 && <TopScorers scorers={scorers} pointsData={pointsData} />}
+        {activeTab === 3 && <WallChart matches={matches} standings={standings} />}
         {activeTab === 4 && <CleanSheets matches={matches} pointsData={pointsData} />}
+        {activeTab === 5 && <Rules />}
       </main>
     </div>
   );
