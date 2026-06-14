@@ -15,6 +15,8 @@ export function calcGroupPoints(standings) {
     table.forEach(row => {
       const name = row.team?.name;
       if (!name) return;
+      // Only award position-based points if the team has actually played
+      if (!row.playedGames) { teamPoints[name.toLowerCase()] = 0; return; }
       const pos = row.position;
       let pts = 0;
       if (pos === 1) pts = 3;

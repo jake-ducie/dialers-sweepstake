@@ -52,6 +52,13 @@ export const TOP_10_FIFA = [
 
 export const PLAYER_MAP = Object.fromEntries(PLAYERS.map(p => [p.id, p]));
 
+// API name → our sweepstake name (for cases where they differ)
+const API_NAME_MAP = {
+  'united states': 'usa',
+  'bosnia-herzegovina': 'bosnia',
+  'congo dr': 'dr congo',
+};
+
 // Build a quick lookup: team name -> { player, tier }
 export const TEAM_LOOKUP = Object.fromEntries(
   ALLOCATIONS.map(a => [a.team.toLowerCase(), a])
@@ -59,7 +66,9 @@ export const TEAM_LOOKUP = Object.fromEntries(
 
 export function getTeamAllocation(teamName) {
   if (!teamName) return null;
-  return TEAM_LOOKUP[teamName.toLowerCase()] || null;
+  const lower = teamName.toLowerCase();
+  const mapped = API_NAME_MAP[lower] || lower;
+  return TEAM_LOOKUP[mapped] || null;
 }
 
 export function getPlayerColor(playerId) {
