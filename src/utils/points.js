@@ -15,14 +15,16 @@ export function calcGroupPoints(standings) {
     table.forEach(row => {
       const name = row.team?.name;
       if (!name) return;
+      // Use canonical sweepstake name as key so lookups work regardless of API name variants
+      const key = getTeamAllocation(name)?.team?.toLowerCase() || name.toLowerCase();
       // Only award position-based points if the team has actually played
-      if (!row.playedGames) { teamPoints[name.toLowerCase()] = 0; return; }
+      if (!row.playedGames) { teamPoints[key] = 0; return; }
       const pos = row.position;
       let pts = 0;
       if (pos === 1) pts = 3;
       else if (pos === 2) pts = 2;
-      else if (pos === 3) pts = 1; // potential best 3rd — we'll treat as 1pt
-      teamPoints[name.toLowerCase()] = pts;
+      else if (pos === 3) pts = 1;
+      teamPoints[key] = pts;
     });
   });
 
@@ -61,8 +63,8 @@ export function calcKnockoutPoints(matches) {
   );
 
   koMatches.forEach(m => {
-    const home = m.homeTeam?.name?.toLowerCase();
-    const away = m.awayTeam?.name?.toLowerCase();
+    const home = getTeamAllocation(m.homeTeam?.name)?.team?.toLowerCase() || m.homeTeam?.name?.toLowerCase();
+    const away = getTeamAllocation(m.awayTeam?.name)?.team?.toLowerCase() || m.awayTeam?.name?.toLowerCase();
     const stage = m.stage;
 
     if (home) {
@@ -134,8 +136,10 @@ export function calcGoldenGlove(matches) {
 
     if (homeGoals === null || awayGoals === null) return;
 
-    if (awayGoals === 0 && home) cleanSheets[home] = (cleanSheets[home] || 0) + 1;
-    if (homeGoals === 0 && away) cleanSheets[away] = (cleanSheets[away] || 0) + 1;
+    const homeKey = getTeamAllocation(m.homeTeam?.name)?.team?.toLowerCase() || home;
+    const awayKey = getTeamAllocation(m.awayTeam?.name)?.team?.toLowerCase() || away;
+    if (awayGoals === 0 && homeKey) cleanSheets[homeKey] = (cleanSheets[homeKey] || 0) + 1;
+    if (homeGoals === 0 && awayKey) cleanSheets[awayKey] = (cleanSheets[awayKey] || 0) + 1;
   });
 
   return cleanSheets;
@@ -157,8 +161,8 @@ export function calcDarkHorseBonus(matches) {
   );
 
   koMatches.forEach(m => {
-    const home = m.homeTeam?.name?.toLowerCase();
-    const away = m.awayTeam?.name?.toLowerCase();
+    const home = getTeamAllocation(m.homeTeam?.name)?.team?.toLowerCase() || m.homeTeam?.name?.toLowerCase();
+    const away = getTeamAllocation(m.awayTeam?.name)?.team?.toLowerCase() || m.awayTeam?.name?.toLowerCase();
 
     // Determine winner
     const homeGoals = m.score?.fullTime?.home ?? 0;
