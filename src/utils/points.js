@@ -43,8 +43,8 @@ const ROUND_PTS = {
 
 // API stage names
 const STAGE_ORDER = [
-  'ROUND_OF_32',
-  'ROUND_OF_16',
+  'LAST_32',
+  'LAST_16',
   'QUARTER_FINALS',
   'SEMI_FINALS',
   'FINAL',
