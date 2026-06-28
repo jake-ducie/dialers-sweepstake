@@ -2,28 +2,38 @@ import { ALLOCATIONS, TOP_10_FIFA, getTeamAllocation } from '../data/sweepstake.
 
 // ── Group stage points ────────────────────────────────────────────────────────
 // standings: array of groups from API response
-export function calcGroupPoints(standings) {
-  const teamPoints = {}; // teamName (lower) -> pts
+export function calcGroupPoints(standings, matches) {
+  const teamPoints = {};
 
   if (!standings) return teamPoints;
 
+  // Build set of teams that appear in LAST_32 fixtures — only these 3rd-place teams actually qualified
+  const qualifiedViaLast32 = new Set(
+    (matches || [])
+      .filter(m => m.stage === 'LAST_32' && (m.homeTeam?.name || m.awayTeam?.name))
+      .flatMap(m => [
+        getTeamAllocation(m.homeTeam?.name)?.team?.toLowerCase() || m.homeTeam?.name?.toLowerCase(),
+        getTeamAllocation(m.awayTeam?.name)?.team?.toLowerCase() || m.awayTeam?.name?.toLowerCase(),
+      ])
+      .filter(Boolean)
+  );
+  const hasLast32Fixtures = qualifiedViaLast32.size > 0;
+
   standings.forEach(group => {
     const table = group.table || [];
-    // Determine qualified teams: top 2 always qualify; best 3rds also qualify
-    // We only know definitive qualification after group stage ends.
-    // Use position in the group table.
     table.forEach(row => {
       const name = row.team?.name;
       if (!name) return;
-      // Use canonical sweepstake name as key so lookups work regardless of API name variants
       const key = getTeamAllocation(name)?.team?.toLowerCase() || name.toLowerCase();
-      // Only award position-based points if the team has actually played
       if (!row.playedGames) { teamPoints[key] = 0; return; }
       const pos = row.position;
       let pts = 0;
       if (pos === 1) pts = 3;
       else if (pos === 2) pts = 2;
-      else if (pos === 3) pts = 1;
+      else if (pos === 3) {
+        // Only award 1pt if we can confirm they're in the LAST_32, otherwise 0
+        pts = hasLast32Fixtures ? (qualifiedViaLast32.has(key) ? 1 : 0) : 1;
+      }
       teamPoints[key] = pts;
     });
   });
@@ -192,7 +202,7 @@ export function calcDarkHorseBonus(matches) {
 
 // ── Aggregate all points per player ──────────────────────────────────────────
 export function calcAllPoints({ standings, matches, scorers }) {
-  const groupPts = calcGroupPoints(standings);
+  const groupPts = calcGroupPoints(standings, matches);
   const { teamBestRound, champion } = calcKnockoutPoints(matches);
   const cleanSheets = calcGoldenGlove(matches);
   const { leaders: bootLeaders } = calcGoldenBoot(scorers);
